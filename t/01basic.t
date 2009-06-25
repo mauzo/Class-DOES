@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-use Test::More;
+use t::Utils;
 my $T;
 
 {
@@ -44,21 +44,12 @@ my $T;
     our @ISA = qw/t::SI t::MI/;
 }
 
-my @classes = qw/t::Base t::OtherBase t::SI t::MI t::Diamond/;
-my %obj = map +($_ => bless [], $_), @classes;
-
-sub does_ok {
-    my ($obj, $role, $ver) = @_;
-    my $B = Test::More->builder;
-
-    my $does = eval { $obj->DOES($role) };
-    $B->is_eq($does, $ver, "$obj DOES $role ($ver)")
-        or $B->diag("\$\@: $@");
-}
+my %obj = map +($_ => bless [], $_),
+    qw/t::Base t::OtherBase t::SI t::MI t::Diamond/;
 
 BEGIN { $T += 5 * 2 }
 
-for (@classes) {
+for (keys %obj) {
     ok eval { $_->can("DOES") },        "$_ can DOES";
     ok eval { $obj{$_}->can("DOES") },  "$_ object can DOES";
 }
@@ -78,9 +69,9 @@ BEGIN { $T += 2 }
 does_ok "t::SI", "t::SI",           1;
 does_ok $obj{"t::SI"}, "t::SI",     1;
 
-BEGIN { $T += 8 * 2 }
+BEGIN { $T += 8 * 4 }
 
-for ("t::MI", $obj{"t::MI"}) {
+for ("t::MI", $obj{"t::MI"}, "t::Diamond", $obj{"t::Diamond"}) {
     does_ok $_, "t::MI",                1;
     does_ok $_, "t::Base",              1;
     does_ok $_, "t::Class",             1;

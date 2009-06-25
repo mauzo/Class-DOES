@@ -39,13 +39,26 @@ sub import {
         "Odd number of arguments passed to Class::DOES.\n" .
         "Did you forget to include the versions?";
 
+    my $meth;
+    $meth = $pkg->can("DOES")
+        and $meth != \&DOES
+        and $meth != (UNIVERSAL->can("DOES") || 0)
+        and warnif "$pkg has inherited an incompatible ->DOES";
+
+    $meth = $pkg->can("isa")
+        and $meth != UNIVERSAL->can("isa")
+        and warnif "$pkg doesn't use \@ISA for inheritance";
+
     my %does;
     {
         no warnings;
         (undef, %does) = @_;
     }
     for (keys %does) {
-        $does{$_} or warnif "False value provided for ->DOES($_)";
+        unless ($does{$_}) {
+            warnif "False value provided for ->DOES($_)";
+            $does{$_} = 1;
+        }
 
         $does{$_} =~ /^(?:\w+::)+\w+$/ and warnif 
             "'$does{$_}' for ->DOES($_) looks like a package.\n" .
@@ -55,25 +68,27 @@ sub import {
     no strict "refs";
 
     *{"$pkg\::DOES"} = \%does;
-    *{"$pkg\::DOES"} = sub {
-        my ($obj, $role) = @_;
-
-        my $class = blessed $obj;
-        defined $class or $class = $obj;
-
-        my %mro;
-        # Yes, this is a list. Shut up with your 'better written as
-        # $mro{}' nonsense.
-        @mro{ (), get_mro $class } = ();
-        for (keys %mro) {
-            if (my $rv = ${"$_\::DOES"}{$role}) {
-                return $rv;
-            }
-        }
-
-        return $obj->isa($role);
-    };
+    *{"$pkg\::DOES"} = \&DOES;
 }
 
+sub DOES {
+    my ($obj, $role) = @_;
+
+    my $class = blessed $obj;
+    defined $class or $class = $obj;
+
+    my %mro;
+    # Yes, this is a list. Shut up with your 'better written as
+    # $mro{}' nonsense.
+    @mro{ (), get_mro $class } = ();
+    for (keys %mro) {
+        no strict "refs";
+        if (my $rv = ${"$_\::DOES"}{$role}) {
+            return $rv;
+        }
+    }
+
+    return $obj->isa($role);
+}
 1;
 

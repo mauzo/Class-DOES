@@ -1,6 +1,12 @@
 package Class::DOES;
 
-use 5.006;
+use 5.006001;
+
+=head1 NAME
+
+Class::DOES - Provide a simple ->DOES override
+
+=cut
 
 use strict;
 use warnings;

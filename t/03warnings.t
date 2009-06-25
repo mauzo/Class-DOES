@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-use Test::More;
+use t::Utils;
 use Class::DOES;
 
 my $T;
@@ -48,7 +48,7 @@ got_warns 0,                            "empty import doesn't warn";
 doimport 1, "Foo::Bar";
 got_warns 0,                            "correct import doesn't warn";
 
-BEGIN { $T += 4 }
+BEGIN { $T += 7 }
 
 $PKG++;
 doimport 1;
@@ -56,7 +56,7 @@ doimport 1;
     no strict "refs";
     ${"t::$PKG\::DOES"}{"Foo::Bar"} = 0;
 }
-is "t::$PKG"->DOES("Foo::Bar"), 1,      "false value in \%DOES replaced";
+does_ok "t::$PKG", "Foo::Bar", 1,       "false value in \%DOES replaced";
 got_warns 1,                            "...with warning";
 like $warns[0], qr/\$t::$PKG\::DOES{Foo::Bar} is false/,
                                         "...correctly";
@@ -67,6 +67,19 @@ like $warns[0], qr/\$t::$PKG\::DOES{Foo::Bar} is false/,
     "t::$PKG"->DOES("Foo::Bar");
 }
 got_warns 0,                            "warning can be disabled";
+
+{
+    package t::False;
+    our %DOES = ("Foo::Bar" => 0);
+}
+
+$PKG++;
+inherit "t::False";
+doimport 1;
+does_ok "t::$PKG", "Foo::Bar", 1,       "false value in inherited \%DOES";
+got_warns 1,                            "...with warning";
+like $warns[0], qr/\$t::False::DOES{Foo::Bar}/,
+                                        "...correctly";
 
 BEGIN { $T += 3 }
 

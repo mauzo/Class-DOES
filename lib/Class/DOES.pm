@@ -84,7 +84,7 @@ sub DOES {
         if (exists ${"$_\::DOES"}{$role}) {
             my $rv = ${"$_\::DOES"}{$role};
             unless ($rv) {
-                warnif "\$$class\::DOES{$role} is false, returning 1";
+                warnif "\$$_\::DOES{$role} is false, returning 1";
                 return 1;
             }
             return $rv;

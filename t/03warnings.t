@@ -70,6 +70,8 @@ got_warns 0,                            "warning can be disabled";
 
 {
     package t::False;
+    # shut up with your 'used only once'
+    no warnings;
     our %DOES = ("Foo::Bar" => 0);
 }
 

@@ -8,25 +8,25 @@ my $T;
 
 {
     package t::Base;
-    use Class::DOES "Role::A" => 1;
+    use Class::DOES "Role::A";
 }
 
 {
     package t::Left;
     our @ISA = "t::Base";
-    use Class::DOES "Role::B" => 2;
+    use Class::DOES "Role::B";
 }
 
 {
     package t::Right;
     our @ISA = "t::Base";
-    use Class::DOES "Role::C" => 3;
+    use Class::DOES "Role::C";
 }
 
 {
     package t::Diamond;
     our @ISA = qw/t::Left t::Right/;
-    use Class::DOES "Role::D" => 4;
+    use Class::DOES "Role::D";
 }
 
 my $obj = bless [], "t::Diamond";
@@ -34,16 +34,16 @@ my $obj = bless [], "t::Diamond";
 BEGIN { $T += 9 * 2 }
 
 for ("t::Diamond", $obj) {
-    does_ok $_, "t::Diamond",   1;
-    does_ok $_, "t::Right",     1;
-    does_ok $_, "t::Left",      1;
-    does_ok $_, "t::Base",      1;
-    does_ok $_, "UNIVERSAL",    1;
+    does_ok $_, "t::Diamond";
+    does_ok $_, "t::Right";
+    does_ok $_, "t::Left";
+    does_ok $_, "t::Base";
+    does_ok $_, "UNIVERSAL";
 
-    does_ok $_, "Role::A",      1;
-    does_ok $_, "Role::B",      2;
-    does_ok $_, "Role::C",      3;
-    does_ok $_, "Role::D",      4;
+    does_ok $_, "Role::A";
+    does_ok $_, "Role::B";
+    does_ok $_, "Role::C";
+    does_ok $_, "Role::D";
 }
 
 {
@@ -58,7 +58,7 @@ for ("t::Diamond", $obj) {
 {
     package t::NR::Right;
     our @ISA = "t::NR::Base";
-    use Class::DOES "Role::E" => 5;
+    use Class::DOES "Role::E";
 }
 
 {
@@ -71,13 +71,13 @@ my $nr = bless [], "t::NR::Diamond";
 BEGIN { $T += 6 * 2 }
 
 for ("t::NR::Diamond", $nr) {
-    does_ok $_, "t::NR::Diamond",   1;
-    does_ok $_, "t::NR::Left",      1;
-    does_ok $_, "t::NR::Right",     1;
-    does_ok $_, "t::NR::Base",      1;
-    does_ok $_, "UNIVERSAL",        1;
+    does_ok $_, "t::NR::Diamond";
+    does_ok $_, "t::NR::Left";
+    does_ok $_, "t::NR::Right";
+    does_ok $_, "t::NR::Base";
+    does_ok $_, "UNIVERSAL";
 
-    does_ok $_, "Role::E",          5;
+    does_ok $_, "Role::E";
 }
 
 BEGIN { plan tests => $T }

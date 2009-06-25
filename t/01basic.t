@@ -15,15 +15,13 @@ my $T;
 
     our @ISA = qw/t::Class/;
 
-    use Class::DOES 
-        "Some::Role"        => "1.00",
-        "Some::Other::Role" => "2.01";
+    use Class::DOES qw/Some::Role Some::Other::Role/;
 }
 
 {
     package t::OtherBase;
 
-    use Class::DOES "Third::Role" => "4.56";
+    use Class::DOES "Third::Role";
 }
 
 {
@@ -57,29 +55,45 @@ for (keys %obj) {
 BEGIN { $T += 5 * 4 }
 
 for ("t::Base", $obj{"t::Base"}, "t::SI", $obj{"t::SI"}) {
-    does_ok $_, "t::Base",              1;
-    does_ok $_, "t::Class",             1;
-    does_ok $_, "UNIVERSAL",            1;
-    does_ok $_, "Some::Role",           "1.00";
-    does_ok $_, "Some::Other::Role",    "2.01";
+    does_ok $_, "t::Base";
+    does_ok $_, "t::Class";
+    does_ok $_, "UNIVERSAL";
+    does_ok $_, "Some::Role";
+    does_ok $_, "Some::Other::Role";
 }
 
 BEGIN { $T += 2 }
 
-does_ok "t::SI", "t::SI",           1;
-does_ok $obj{"t::SI"}, "t::SI",     1;
+does_ok "t::SI", "t::SI";
+does_ok $obj{"t::SI"}, "t::SI";
 
 BEGIN { $T += 8 * 4 }
 
 for ("t::MI", $obj{"t::MI"}, "t::Diamond", $obj{"t::Diamond"}) {
-    does_ok $_, "t::MI",                1;
-    does_ok $_, "t::Base",              1;
-    does_ok $_, "t::Class",             1;
-    does_ok $_, "t::OtherBase",         1;
-    does_ok $_, "UNIVERSAL",            1;
-    does_ok $_, "Some::Role",           "1.00";
-    does_ok $_, "Some::Other::Role",    "2.01";
-    does_ok $_, "Third::Role",          "4.56";
+    does_ok $_, "t::MI";
+    does_ok $_, "t::Base";
+    does_ok $_, "t::Class";
+    does_ok $_, "t::OtherBase";
+    does_ok $_, "UNIVERSAL";
+    does_ok $_, "Some::Role";
+    does_ok $_, "Some::Other::Role";
+    does_ok $_, "Third::Role";
 }
+
+BEGIN { $T += 2 }
+
+{
+    package t::Use;
+    use Class::DOES qw/Foo::Bar/;
+}
+
+{
+    package t::Hash;
+    use Class::DOES;
+    our %DOES = ( "Foo::Bar" => 2.56 );
+}
+
+is $t::Use::DOES{"Foo::Bar"}, 1,        "importing sets \%DOES";
+does_ok "t::Hash", "Foo::Bar", 2.56,    "setting \%DOES implements role";
 
 BEGIN { plan tests => $T }

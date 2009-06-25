@@ -14,21 +14,16 @@ $SIG{__WARN__} = sub { push @warns, $_[0] };
 my $PKG = "TestAAAA";
 
 sub doimport {
+    my $warn = shift;
     my $args = join ",", map qq{"\Q$_\E"}, @_;
     my $B = Test::More->builder;
 
-    @warns = ();
-    eval qq{
-        package t::NW::$PKG;
-        no warnings "Class::DOES";
-        Class::DOES->import($args);
-    };
-    $B->ok(!@warns, "warnings can be disabled")
-        or $B->diag(join "\n", @warns);
+    $warn = $warn ? "" : "no warnings 'Class::DOES';";
 
     @warns = ();
     eval qq{
         package t::$PKG;
+        $warn;
         Class::DOES->import($args);
     };
 }
@@ -36,7 +31,6 @@ sub doimport {
 sub inherit {
     no strict "refs";
     @{"t\::$PKG\::ISA"} = @_;
-    @{"t\::NW\::$PKG\::ISA"} = @_;
 }
 
 sub got_warns {
@@ -46,38 +40,35 @@ sub got_warns {
         or $B->diag(join "\n", @warns);
 }
 
-BEGIN { $T += 4 }
+BEGIN { $T += 2 }
 
-doimport;
+doimport 1;
 got_warns 0,                            "empty import doesn't warn";
 
-doimport "Foo::Bar" => 1;
+doimport 1, "Foo::Bar";
 got_warns 0,                            "correct import doesn't warn";
 
-BEGIN { $T += 11 }
+BEGIN { $T += 4 }
 
 $PKG++;
-doimport "Foo::Bar" => 0;
-got_warns 1,                            "false value warns";
-like $warns[0], qr/False value.*->DOES\(Foo::Bar\)/,
-                                        "...correctly";
-is "t::$PKG"->DOES("Foo::Bar"), 1,      "value adjusted"; 
-
-$PKG++;
-doimport qw/Foo::Bar/;
-got_warns 2,                            "odd import list warns";
-like $warns[0], qr/Odd number of.*forget to include/s,
-                                        "...correctly";
-like $warns[1], qr/False value/,        "...correctly";
-
-$PKG++;
-doimport qw/Foo::Bar Bar::Baz/;
-got_warns 1,                            "version-like-pkg warns";
-like $warns[0], 
-    qr/'Bar::Baz' for ->DOES\(Foo::Bar\) looks like.*forget/s,
+doimport 1;
+{
+    no strict "refs";
+    ${"t::$PKG\::DOES"}{"Foo::Bar"} = 0;
+}
+is "t::$PKG"->DOES("Foo::Bar"), 1,      "false value in \%DOES replaced";
+got_warns 1,                            "...with warning";
+like $warns[0], qr/\$t::$PKG\::DOES{Foo::Bar} is false/,
                                         "...correctly";
 
-BEGIN { $T += 8 }
+@warns = ();
+{
+    no warnings "Class::DOES";
+    "t::$PKG"->DOES("Foo::Bar");
+}
+got_warns 0,                            "warning can be disabled";
+
+BEGIN { $T += 3 }
 
 {
     package t::Does;
@@ -86,10 +77,17 @@ BEGIN { $T += 8 }
 
 $PKG++;
 inherit "t::Does";
-doimport;
+doimport 1;
 got_warns 1,                            "bad ->DOES warns";
 like $warns[0], qr/t::$PKG.*incompatible ->DOES/,
                                         "...correctly";
+
+$PKG++;
+inherit "t::Does";
+doimport 0;
+got_warns 0,                            "warning can be disabled";
+
+BEGIN { $T += 1 }
 
 {
     package t::MyDoes;
@@ -98,8 +96,10 @@ like $warns[0], qr/t::$PKG.*incompatible ->DOES/,
 
 $PKG++;
 inherit "t::MyDoes";
-doimport;
+doimport 1;
 got_warns 0,                            "my ->DOES doesn't warn";
+
+BEGIN { $T += 3 }
 
 {
     package t::Isa;
@@ -108,10 +108,14 @@ got_warns 0,                            "my ->DOES doesn't warn";
 
 $PKG++;
 inherit "t::Isa";
-doimport;
+doimport 1;
 got_warns 1,                            "bad ->isa warns";
 like $warns[0], qr/t::$PKG doesn't use \@ISA/,
                                         "...correctly";
 
+$PKG++;
+inherit "t::Isa";
+doimport 0;
+got_warns 0,                            "warning can be disabled";
 
 BEGIN { plan tests => $T }

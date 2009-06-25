@@ -13,11 +13,14 @@ our @EXPORT = (
 );
 
 sub does_ok {
-    my ($obj, $role, $ver) = @_;
+    my ($obj, $role, $ver, $name) = @_;
     my $B = Test::More->builder;
 
+    $ver    ||= 1;
+    $name   ||= "$obj DOES $role";
+
     my $does = eval { $obj->DOES($role) };
-    $B->is_eq($does, $ver, "$obj DOES $role ($ver)")
+    $B->is_eq($does, $ver, $name)
         or $B->diag("\$\@: $@");
 }
 

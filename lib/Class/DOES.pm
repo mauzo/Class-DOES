@@ -32,12 +32,8 @@ sub get_mro {
 }
 
 sub import {
+    my (undef, @roles) = @_;
     my $pkg = caller;
-
-    # there is an extra argument on the start
-    @_ % 2 or warnif 
-        "Odd number of arguments passed to Class::DOES.\n" .
-        "Did you forget to include the versions?";
 
     my $meth;
     $meth = $pkg->can("DOES")
@@ -49,21 +45,7 @@ sub import {
         and $meth != UNIVERSAL->can("isa")
         and warnif "$pkg doesn't use \@ISA for inheritance";
 
-    my %does;
-    {
-        no warnings;
-        (undef, %does) = @_;
-    }
-    for (keys %does) {
-        unless ($does{$_}) {
-            warnif "False value provided for ->DOES($_)";
-            $does{$_} = 1;
-        }
-
-        $does{$_} =~ /^(?:\w+::)+\w+$/ and warnif 
-            "'$does{$_}' for ->DOES($_) looks like a package.\n" .
-            "Did you forget to include the versions?";
-    }
+    my %does = map +($_, 1), @roles;
 
     no strict "refs";
 
@@ -83,7 +65,12 @@ sub DOES {
     @mro{ (), get_mro $class } = ();
     for (keys %mro) {
         no strict "refs";
-        if (my $rv = ${"$_\::DOES"}{$role}) {
+        if (exists ${"$_\::DOES"}{$role}) {
+            my $rv = ${"$_\::DOES"}{$role};
+            unless ($rv) {
+                warnif "\$$class\::DOES{$role} is false, returning 1";
+                return 1;
+            }
             return $rv;
         }
     }

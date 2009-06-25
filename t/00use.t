@@ -10,6 +10,6 @@ use_ok "Class::DOES"
 
 ok eval { 
     package Foo::Bar;
-    Class::DOES->import("Some::Role" => 1) 
+    Class::DOES->import("Some::Role") 
 }, "import accepts roles"
     or BAIL_OUT "import doesn't work right!";

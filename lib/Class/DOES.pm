@@ -7,8 +7,6 @@ use Scalar::Util qw/blessed/;
 
 our $VERSION = "1.00";
 
-use subs "get_mro";
-
 sub get_mro {
     my ($class) = @_;
 
@@ -29,27 +27,23 @@ sub import {
 
     no strict "refs";
 
-    @{"$pkg\::DOES"} = @roles;
+    %{"$pkg\::DOES"} = @roles;
     *{"$pkg\::DOES"} = sub {
         my ($obj, $role) = @_;
 
-        warn "before blessed:" . $obj->isa($role);
+        my $class = blessed $obj;
+        defined $class or $class = $obj;
 
-        my $class = blessed $obj || $obj;
-
-        warn "before get_mro:" . $obj->isa($role);
-        
-        for (get_mro $class) {
-            warn "trying $_ for $class";
-            if (grep $_ eq $role, @{"$_\::DOES"}) {
-                return 1;
+        my %mro;
+        # yes, this is a list.
+        @mro{ (), get_mro $class } = ();
+        for (keys %mro) {
+            if (my $rv = ${"$_\::DOES"}{$role}) {
+                return $rv;
             }
         }
 
-        warn "trying $obj->isa($role)";
-        my $rv = $obj->isa($role);
-        warn "GOT: $rv";
-        return $rv;
+        return $obj->isa($role);
     };
 }
 

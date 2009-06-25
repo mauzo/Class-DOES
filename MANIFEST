@@ -4,4 +4,5 @@ MANIFEST			This list of files
 t/00use.t
 t/01basic.t
 t/02inherit.t
+t/03warnings.t
 t/Utils.pm

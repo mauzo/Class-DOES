@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 BEGIN { require 5.006001 }
 
 my @MM = (
-    NAME            => "Class-DOES",
+    NAME            => "Class::DOES",
     VERSION_FROM    => "lib/Class/DOES.pm",
     PREREQ_PM       => { 
         "Scalar::Util"  => "1.00",

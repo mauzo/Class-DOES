@@ -58,7 +58,7 @@ doimport 1;
 }
 does_ok "t::$PKG", "Foo::Bar", 1,       "false value in \%DOES replaced";
 got_warns 1,                            "...with warning";
-like $warns[0], qr/\$t::$PKG\::DOES{Foo::Bar} is false/,
+like $warns[0], qr/\$t::$PKG\::DOES\{Foo::Bar\} is false/,
                                         "...correctly";
 
 @warns = ();
@@ -80,7 +80,7 @@ inherit "t::False";
 doimport 1;
 does_ok "t::$PKG", "Foo::Bar", 1,       "false value in inherited \%DOES";
 got_warns 1,                            "...with warning";
-like $warns[0], qr/\$t::False::DOES{Foo::Bar}/,
+like $warns[0], qr/\$t::False::DOES\{Foo::Bar\}/,
                                         "...correctly";
 
 BEGIN { $T += 3 }
